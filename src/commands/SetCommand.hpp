@@ -1,6 +1,7 @@
 #pragma once
 #include "command.hpp"
 #include "database.hpp"
+#include <asio/io_context.hpp>
 #include <memory>
 #include <optional>
 #include <string>
@@ -25,7 +26,5 @@ private:
   std::string &buff_;
   std::string key_;
   std::string value_;
-  std::optional<std::string> condition_;
-  std::optional<std::string> get_;
   std::optional<std::string> expiration_;
 };

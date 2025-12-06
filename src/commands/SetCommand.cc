@@ -1,4 +1,5 @@
 #include "SetCommand.hpp"
+#include <optional>
 #include <string>
 
 SetCommand::SetCommand(std::shared_ptr<Database> db, std::string &buf,
@@ -8,6 +9,10 @@ SetCommand::SetCommand(std::shared_ptr<Database> db, std::string &buf,
       expiration_(std::move(expiration)) {}
 
 void SetCommand::serveRequest() {
-  db_->setValue(key_, value_);
+  if (expiration_ != std::nullopt) {
+    db_->setValue(key_, value_, std::stoll(expiration_.value()));
+  } else {
+    db_->setValue(key_, value_);
+  }
   buff_ = "+OK\r\n";
 }

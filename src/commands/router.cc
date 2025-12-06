@@ -2,6 +2,8 @@
 #include "EchoCommand.hpp"
 #include "GetCommand.hpp"
 #include "SetCommand.hpp"
+#include <cstdlib>
+#include <memory>
 
 enum class CommandType { PING, ECHO_CMD, SET, GET, UNKNOWN };
 
@@ -45,6 +47,12 @@ router::get_command(const std::string &cmd_name,
 
   case CommandType::SET:
     if (!args.empty()) {
+      if (args.size() >= 4) {
+        if (args[2].compare("PX") == 0 || args[2].compare("EX") == 0) {
+          return std::make_unique<SetCommand>(db, buffer, args[0], args[1],
+                                              args[3]);
+        }
+      }
       return std::make_unique<SetCommand>(db, buffer, args[0], args[1],
                                           std::nullopt);
     }

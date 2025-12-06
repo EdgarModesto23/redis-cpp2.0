@@ -150,7 +150,6 @@ private:
 
   void do_write() {
     auto self(shared_from_this());
-    spdlog::info(message_);
     asio::async_write(socket_, asio::buffer(message_),
                       [this, self](std::error_code ec, std::size_t) {
                         if (!ec) {
