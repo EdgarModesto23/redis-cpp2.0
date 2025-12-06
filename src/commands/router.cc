@@ -1,25 +1,38 @@
 #include "router.hpp"
+#include "EchoCommand.hpp"
 
-enum class CommandType { PING, UNKNOWN };
+enum class CommandType { PING, ECHO_CMD, UNKNOWN };
 
-CommandType to_command(const BulkString &s) {
-  const std::string &v = s.get();
-
-  if (v == "PING")
+static CommandType to_command(const std::string &cmd) {
+  if (cmd == "PING")
     return CommandType::PING;
-
+  if (cmd == "ECHO")
+    return CommandType::ECHO_CMD;
   return CommandType::UNKNOWN;
 }
 
-std::unique_ptr<ICommand> router::get_command(BulkString s, Server &srv_,
-                                              std::string &buffer) {
-  switch (to_command(s)) {
-  case CommandType::PING:
-    return std::make_unique<PingCommand>(srv_.get_db(), buffer);
-  case CommandType::UNKNOWN:
-    return std::make_unique<PingCommand>(srv_.get_db(), buffer);
+std::unique_ptr<ICommand>
+router::get_command(const std::string &cmd_name,
+                    const std::vector<std::string> &args, Server &srv,
+                    std::string &buffer) {
+  auto db = srv.get_db();
 
+  switch (to_command(cmd_name)) {
+
+  case CommandType::PING:
+    if (!args.empty()) {
+      return std::make_unique<PingCommand>(db, buffer, args[0]);
+    }
+    return std::make_unique<PingCommand>(db, buffer);
+
+  case CommandType::ECHO_CMD:
+    if (!args.empty()) {
+      return std::make_unique<EchoCommand>(db, buffer, args[0]);
+    }
+    return std::make_unique<PingCommand>(db, buffer);
+
+  case CommandType::UNKNOWN:
   default:
-    return std::make_unique<PingCommand>(srv_.get_db(), buffer);
-  };
+    return std::make_unique<PingCommand>(db, buffer);
+  }
 }

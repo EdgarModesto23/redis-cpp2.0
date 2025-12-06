@@ -6,7 +6,8 @@
 #include <memory>
 
 namespace router {
-std::unique_ptr<ICommand> get_command(BulkString s, Server &srv_,
-                                      std::string &buffer);
+std::unique_ptr<ICommand> get_command(const std::string &cmd_name,
+                                      const std::vector<std::string> &args,
+                                      Server &srv, std::string &buffer);
 
 }

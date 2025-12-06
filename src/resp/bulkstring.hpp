@@ -15,6 +15,7 @@ public:
   char *encode() override;
 
   static BulkString decode(const char *data, size_t size, size_t &consumed);
+  static std::string to_resp(const std::string &val);
 
   const std::string &get() const { return value_; }
 

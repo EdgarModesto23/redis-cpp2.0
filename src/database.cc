@@ -10,3 +10,7 @@ std::string Database::getValue(std::string key) {
     return std::string();
   }
 }
+
+void Database::setValue(std::string key, std::string value) {
+  kvStore.insert({key, value});
+}

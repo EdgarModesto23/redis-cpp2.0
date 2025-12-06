@@ -16,13 +16,11 @@ public:
       : db_(db), buff_(buf), message_(message) {};
   ~PingCommand() override = default;
 
-  // No copy, allow move
   PingCommand(const PingCommand &) = delete;
   PingCommand &operator=(const PingCommand &) = delete;
   PingCommand(PingCommand &&) noexcept = default;
   PingCommand &operator=(PingCommand &&) noexcept = delete;
 
-  // Implements ICommand
   void serveRequest() override;
 
 private:

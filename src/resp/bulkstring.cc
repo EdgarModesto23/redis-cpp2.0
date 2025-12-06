@@ -59,3 +59,16 @@ BulkString BulkString::decode(const char *data, size_t size, size_t &consumed) {
 
   return BulkString(value);
 }
+
+std::string BulkString::to_resp(const std::string &value) {
+  std::string resp;
+  resp.reserve(value.size() + 32);
+
+  resp += "$";
+  resp += std::to_string(value.size());
+  resp += "\r\n";
+  resp += value;
+  resp += "\r\n";
+
+  return resp;
+}

@@ -70,26 +70,54 @@ private:
   tcp_connection(asio::io_context &io_context, Server &srv)
       : socket_(io_context), server_(srv) {}
 
-  std::vector<std::unique_ptr<ICommand>>
-  parse_request(const char *req, size_t num_commands, size_t length) {
-    std::vector<std::unique_ptr<ICommand>> result{};
+  std::unique_ptr<ICommand> parse_command(const char *req, size_t length) {
     const char *cursor = req;
     size_t remaining = length;
 
-    for (size_t i = 0; i < num_commands; i++) {
+    if (remaining < 4 || cursor[0] != '*') {
+      throw std::runtime_error("Invalid RESP array");
+    }
+
+    cursor++;
+    remaining--;
+
+    int num_elements = 0;
+    while (remaining > 0 && std::isdigit(*cursor)) {
+      num_elements = num_elements * 10 + (*cursor - '0');
+      cursor++;
+      remaining--;
+    }
+
+    if (remaining < 2 || cursor[0] != '\r' || cursor[1] != '\n')
+      throw std::runtime_error("Invalid RESP array header");
+
+    cursor += 2;
+    remaining -= 2;
+
+    if (num_elements <= 0)
+      throw std::runtime_error("Empty RESP array");
+
+    std::vector<BulkString> args;
+    args.reserve(num_elements);
+
+    for (int i = 0; i < num_elements; i++) {
       size_t consumed = 0;
+      BulkString bs = BulkString::decode(cursor, remaining, consumed);
 
-      BulkString cmd = BulkString::decode(cursor, remaining, consumed);
-
-      auto command = router::get_command(cmd, server_, message_);
-
-      result.push_back(std::move(command));
+      args.push_back(std::move(bs));
 
       cursor += consumed;
       remaining -= consumed;
     }
 
-    return result;
+    std::string command_name = args[0].get();
+
+    std::vector<std::string> arguments;
+    for (size_t i = 1; i < args.size(); i++) {
+      arguments.push_back(args[i].get());
+    }
+
+    return router::get_command(command_name, arguments, server_, message_);
   }
 
   void do_read() {
@@ -115,11 +143,9 @@ private:
 
     size_t remaining = req.length() - (cursor - req.c_str());
 
-    auto commands = parse_request(cursor, n_commands, remaining);
+    auto cmd = parse_command(req.c_str(), req.length());
 
-    for (auto &cmd : commands) {
-      cmd->serveRequest();
-    }
+    cmd->serveRequest();
   }
 
   void do_write() {
