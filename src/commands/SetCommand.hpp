@@ -9,8 +9,6 @@ class SetCommand : public ICommand {
 public:
   explicit SetCommand(std::shared_ptr<Database> db, std::string &buf,
                       std::string key, std::string value,
-                      std::optional<std::string> condition,
-                      std::optional<std::string> get,
                       std::optional<std::string> expiration) noexcept;
 
   ~SetCommand() override = default;
