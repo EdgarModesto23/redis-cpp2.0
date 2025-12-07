@@ -1,0 +1,13 @@
+#include "RpushCommand.hpp"
+#include "integer.hpp"
+#include <string>
+
+RpushCommand::RpushCommand(std::shared_ptr<Database> db, std::string &buf,
+                           std::string key, std::string element) noexcept
+    : db_(db), buff_(buf), key_(key), element_(element) {}
+
+void RpushCommand::serveRequest() {
+  int size = db_->setList(key_, element_);
+
+  buff_ = Integer::to_resp(size);
+}

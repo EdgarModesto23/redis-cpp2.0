@@ -1,11 +1,12 @@
 #include "router.hpp"
 #include "EchoCommand.hpp"
 #include "GetCommand.hpp"
+#include "RpushCommand.hpp"
 #include "SetCommand.hpp"
 #include <cstdlib>
 #include <memory>
 
-enum class CommandType { PING, ECHO_CMD, SET, GET, UNKNOWN };
+enum class CommandType { PING, ECHO_CMD, SET, GET, RPUSH, UNKNOWN };
 
 static CommandType to_command(const std::string &cmd) {
   if (cmd == "PING")
@@ -16,6 +17,8 @@ static CommandType to_command(const std::string &cmd) {
     return CommandType::SET;
   if (cmd == "GET")
     return CommandType::GET;
+  if (cmd == "RPUSH")
+    return CommandType::RPUSH;
   return CommandType::UNKNOWN;
 }
 
@@ -55,6 +58,12 @@ router::get_command(const std::string &cmd_name,
       }
       return std::make_unique<SetCommand>(db, buffer, args[0], args[1],
                                           std::nullopt);
+    }
+    return std::make_unique<PingCommand>(db, buffer);
+
+  case CommandType::RPUSH:
+    if (!args.empty()) {
+      return std::make_unique<RpushCommand>(db, buffer, args[0], args[1]);
     }
     return std::make_unique<PingCommand>(db, buffer);
 

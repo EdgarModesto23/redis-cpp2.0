@@ -9,7 +9,7 @@ CPP_HEADER_TEMPLATE = """#pragma once
 #include <optional>
 #include <string>
 #include "database.hpp"
-#include "icommand.hpp"
+#include "command.hpp"
 
 class {class_name} : public ICommand {{
 public:
@@ -35,8 +35,8 @@ private:
 CPP_SOURCE_TEMPLATE = """#include "{header_name}"
 #include <string>
 
-{class_name}::{class_name}(std::shared_ptr<Database> db, std::string &buf{ctor_args})
-    : db_(db), buff_(buf{ctor_inits})
+{class_name}::{class_name}(std::shared_ptr<Database> db, std::string &buf{ctor_args}) noexcept
+    : db_(db), buff_(buf){ctor_inits}
 {{
 }}
 
@@ -127,6 +127,7 @@ def main():
         print("Usage: generate_commands.py <json_dir> <output_dir>")
         sys.exit(1)
 
+
     json_dir = Path(sys.argv[1])
     out_dir = Path(sys.argv[2])
 
@@ -137,7 +138,12 @@ def main():
     out_dir.mkdir(parents=True, exist_ok=True)
 
     for file in json_dir.glob("*.json"):
+        out_file = out_dir / (file.stem + ".hpp") 
+        if out_file.exists():
+            print(f"Skipping {file.name}: class file already exists.")
+            continue
         generate_cpp_class(file, out_dir)
+
 
 
 if __name__ == "__main__":
