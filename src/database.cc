@@ -71,7 +71,7 @@ int Database::setList(const std::string &key, std::vector<std::string> value) {
 
   if (!listOpt) {
     listStore_[key] = {std::move(value)};
-    return 1;
+    return listStore_[key].size();
   }
 
   auto &vec = listStore_[key];

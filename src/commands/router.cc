@@ -63,7 +63,9 @@ router::get_command(const std::string &cmd_name,
 
   case CommandType::RPUSH:
     if (!args.empty()) {
-      return std::make_unique<RpushCommand>(db, buffer, args[0], args[1]);
+      return std::make_unique<RpushCommand>(
+          db, buffer, args[0],
+          std::vector<std::string>(args.begin() + 1, args.end()));
     }
     return std::make_unique<PingCommand>(db, buffer);
 

@@ -1,13 +1,18 @@
 #pragma once
+#include "command.hpp"
+#include "database.hpp"
 #include <memory>
 #include <optional>
 #include <string>
-#include "database.hpp"
-#include "command.hpp"
 
 class RpushCommand : public ICommand {
 public:
-  explicit RpushCommand(std::shared_ptr<Database> db, std::string &buf, std::string key, std::string element) noexcept;
+  explicit RpushCommand(std::shared_ptr<Database> db, std::string &buf,
+                        std::string key,
+                        std::vector<std::string> elements) noexcept;
+
+  explicit RpushCommand(std::shared_ptr<Database> db, std::string &buf,
+                        std::string key, std::string element) noexcept;
 
   ~RpushCommand() override = default;
 
@@ -22,6 +27,5 @@ private:
   std::shared_ptr<Database> db_;
   std::string &buff_;
   std::string key_;
-  std::string element_;
-
+  std::vector<std::string> element_;
 };
