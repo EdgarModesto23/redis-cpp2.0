@@ -3,9 +3,25 @@
 #include <asio/error_code.hpp>
 #include <chrono>
 #include <cstdint>
+#include <exception>
 #include <optional>
 #include <string>
 #include <vector>
+
+class KeyDoesnotExist : public std::exception {
+public:
+  explicit KeyDoesnotExist(const char *key) : key_(key) {
+    // Build a descriptive error message
+    message_ = "Key does not exist: ";
+    message_ += key_;
+  }
+
+  const char *what() const noexcept override { return message_.c_str(); }
+
+private:
+  const char *key_;
+  std::string message_;
+};
 
 std::optional<std::string> Database::findKvStoreValue(const std::string &key) {
   auto it = kvStore_.find(key);
@@ -140,4 +156,33 @@ void Database::removeListValue(const std::string &key, std::vector<int> idx) {
   }
 
   return;
+}
+
+std::vector<std::string> Database::getListRange(const std::string &key,
+                                                int begin, int end) {
+  auto listOpt = findlistStoreValue(key);
+
+  if (!listOpt) {
+    return std::vector<std::string>();
+  }
+
+  const auto &vec = listStore_[key];
+
+  int size = static_cast<int>(vec.size());
+
+  if (begin < 0)
+    begin = size + begin;
+  if (end < 0)
+    end = size + end;
+
+  if (begin < 0)
+    begin = 0;
+  if (end >= size)
+    end = size - 1;
+
+  if (begin > end || begin >= size) {
+    return {};
+  }
+
+  return std::vector<std::string>(vec.begin() + begin, vec.begin() + end + 1);
 }
