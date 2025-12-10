@@ -20,7 +20,7 @@ public:
   std::string getListValue(const std::string &key, int idx = -1);
   std::vector<std::string> getListRange(const std::string &key, int begin,
                                         int end = -1);
-  size_t getListLength(const std::string &);
+  size_t getListLength(const std::string &key);
   void removeListValue(const std::string &key, int idx);
   void removeListValue(const std::string &key, std::vector<int> idx);
 

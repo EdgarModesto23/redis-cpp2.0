@@ -122,6 +122,7 @@ size_t Database::getListLength(const std::string &key) {
 
   return vec.size();
 }
+
 void Database::removeListValue(const std::string &key, int idx) {
   auto listOpt = findlistStoreValue(key);
 

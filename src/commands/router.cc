@@ -1,6 +1,7 @@
 #include "router.hpp"
 #include "EchoCommand.hpp"
 #include "GetCommand.hpp"
+#include "LlenCommand.hpp"
 #include "LpushCommand.hpp"
 #include "LrangeCommand.hpp"
 #include "RpushCommand.hpp"
@@ -17,6 +18,7 @@ enum class CommandType {
   RPUSH,
   LPUSH,
   LRANGE,
+  LLEN,
   UNKNOWN
 };
 
@@ -35,6 +37,8 @@ static CommandType to_command(const std::string &cmd) {
     return CommandType::LRANGE;
   if (cmd == "LPUSH")
     return CommandType::LPUSH;
+  if (cmd == "LLEN")
+    return CommandType::LLEN;
   return CommandType::UNKNOWN;
 }
 
@@ -98,6 +102,12 @@ router::get_command(const std::string &cmd_name,
           db, buffer, args[0],
           std::vector<std::string>(args.begin() + 1, args.end()));
     }
+
+  case CommandType::LLEN:
+    if (!args.empty()) {
+      return std::make_unique<LlenCommand>(db, buffer, args[0]);
+    }
+    return std::make_unique<PingCommand>(db, buffer);
 
   case CommandType::UNKNOWN:
   default:
