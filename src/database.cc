@@ -150,6 +150,7 @@ std::vector<std::string> Database::removeListValue(const std::string &key,
 
   auto &vec = listStore_[key];
 
+  // This is trash and i'm aware of it
   for (int i = 0; i < idx; i++) {
     auto val = vec.front();
     vec.erase(vec.begin());
