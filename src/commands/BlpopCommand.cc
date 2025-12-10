@@ -11,7 +11,7 @@ void BlpopCommand::serveRequest(std::function<void(std::string)> respond) {
   db_->asyncBlpop(key_, timeout_,
                   [respond, key = key_](std::optional<std::string> result) {
                     if (!result.has_value()) {
-                      respond("$-1\r\n");
+                      respond(RespArray::to_resp({}));
                     } else {
                       respond(RespArray::to_resp({key, result.value()}));
                     }
