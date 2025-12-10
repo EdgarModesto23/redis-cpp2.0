@@ -123,40 +123,40 @@ size_t Database::getListLength(const std::string &key) {
   return vec.size();
 }
 
-void Database::removeListValue(const std::string &key, int idx) {
+std::string Database::removeListValue(const std::string &key) {
   auto listOpt = findlistStoreValue(key);
 
   if (!listOpt) {
-    return;
+    return std::string();
   }
 
   auto &vec = listStore_[key];
-  if (idx == -1) {
-    vec.pop_back();
-  }
 
-  vec.erase(vec.begin() + idx);
+  auto val = vec.front();
+  vec.erase(vec.begin());
 
-  return;
+  return val;
 }
 
-void Database::removeListValue(const std::string &key, std::vector<int> idx) {
+std::vector<std::string> Database::removeListValue(const std::string &key,
+                                                   int idx) {
   auto listOpt = findlistStoreValue(key);
 
   if (!listOpt) {
-    return;
+    return std::vector<std::string>{};
   }
+
+  std::vector<std::string> values{};
 
   auto &vec = listStore_[key];
-  if (idx.empty()) {
-    return;
+
+  for (int i = 0; i < idx; i++) {
+    auto val = vec.front();
+    vec.erase(vec.begin());
+    values.push_back(std::move(val));
   }
 
-  for (auto i : idx) {
-    vec.erase(vec.begin() + i);
-  }
-
-  return;
+  return values;
 }
 
 std::vector<std::string> Database::getListRange(const std::string &key,

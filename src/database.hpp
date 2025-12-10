@@ -21,8 +21,8 @@ public:
   std::vector<std::string> getListRange(const std::string &key, int begin,
                                         int end = -1);
   size_t getListLength(const std::string &key);
-  void removeListValue(const std::string &key, int idx);
-  void removeListValue(const std::string &key, std::vector<int> idx);
+  std::string removeListValue(const std::string &key);
+  std::vector<std::string> removeListValue(const std::string &key, int idx);
 
 private:
   std::unordered_map<std::string, std::string> kvStore_;
