@@ -132,7 +132,7 @@ router::get_command(const std::string &cmd_name,
   case CommandType::BLPOP:
     if (!args.empty()) {
       return std::make_unique<BlpopCommand>(db, buffer, args[0],
-                                            std::stoll(args[1]));
+                                            std::stod(args[1]));
     }
     return std::make_unique<PingCommand>(db, buffer);
 

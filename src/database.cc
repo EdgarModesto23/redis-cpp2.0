@@ -220,7 +220,6 @@ void Database::asyncBlpop(const std::string &key, double timeout,
 
   // 2. If timeout > 0, create timer. If timeout == 0 → wait indefinitely.
   if (timeout > 0) {
-    spdlog::info("Greater");
     timer = std::make_shared<asio::steady_timer>(ctx_);
     timer->expires_after(
         std::chrono::milliseconds(static_cast<int>(timeout * 1000)));
