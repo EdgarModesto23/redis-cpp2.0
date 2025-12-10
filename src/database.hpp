@@ -14,6 +14,7 @@ public:
   std::string getValue(const std::string &key);
   void setValue(const std::string &key, std::string &value, int64_t time = 0);
 
+  int setListLeft(const std::string &key, std::vector<std::string> &value);
   int setList(const std::string &key, std::string &value);
   int setList(const std::string &key, std::vector<std::string> value);
   std::string getListValue(const std::string &key, int idx = -1);

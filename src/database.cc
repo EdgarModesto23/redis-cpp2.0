@@ -163,11 +163,10 @@ std::vector<std::string> Database::getListRange(const std::string &key,
   auto listOpt = findlistStoreValue(key);
 
   if (!listOpt) {
-    return std::vector<std::string>();
+    return {};
   }
 
-  const auto &vec = listStore_[key];
-
+  const auto &vec = *listOpt;
   int size = static_cast<int>(vec.size());
 
   if (begin < 0)
@@ -184,5 +183,19 @@ std::vector<std::string> Database::getListRange(const std::string &key,
     return {};
   }
 
-  return std::vector<std::string>(vec.begin() + begin, vec.begin() + end + 1);
+  return {vec.begin() + begin, vec.begin() + end + 1};
+}
+
+int Database::setListLeft(const std::string &key,
+                          std::vector<std::string> &value) {
+
+  auto &vec = listStore_[key];
+  vec.reserve(vec.size() + value.size());
+
+  for (auto &v : value)
+    vec.push_back(v);
+
+  std::reverse(vec.begin(), vec.end());
+
+  return vec.size();
 }
