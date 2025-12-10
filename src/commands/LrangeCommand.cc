@@ -8,6 +8,6 @@ LrangeCommand::LrangeCommand(std::shared_ptr<Database> db, std::string &buf,
                              long long stop) noexcept
     : db_(db), buff_(buf), key_(key), start_(start), stop_(stop) {}
 
-void LrangeCommand::serveRequest() {
-  buff_ = RespArray::to_resp(db_->getListRange(key_, start_, stop_));
+void LrangeCommand::serveRequest(std::function<void(std::string)> respond) {
+  respond(RespArray::to_resp(db_->getListRange(key_, start_, stop_)));
 }

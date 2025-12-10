@@ -1,4 +1,5 @@
 #include "router.hpp"
+#include "BlpopCommand.hpp"
 #include "EchoCommand.hpp"
 #include "GetCommand.hpp"
 #include "LlenCommand.hpp"
@@ -22,6 +23,7 @@ enum class CommandType {
   LRANGE,
   LLEN,
   LPOP,
+  BLPOP,
   UNKNOWN
 };
 
@@ -44,6 +46,8 @@ static CommandType to_command(const std::string &cmd) {
     return CommandType::LLEN;
   if (cmd == "LPOP")
     return CommandType::LPOP;
+  if (cmd == "BLPOP")
+    return CommandType::BLPOP;
   return CommandType::UNKNOWN;
 }
 
@@ -122,6 +126,13 @@ router::get_command(const std::string &cmd_name,
       } else {
         return std::make_unique<LpopCommand>(db, buffer, args[0], std::nullopt);
       }
+    }
+    return std::make_unique<PingCommand>(db, buffer);
+
+  case CommandType::BLPOP:
+    if (!args.empty()) {
+      return std::make_unique<BlpopCommand>(db, buffer, args[0],
+                                            std::stoll(args[1]));
     }
     return std::make_unique<PingCommand>(db, buffer);
 

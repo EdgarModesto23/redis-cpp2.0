@@ -127,9 +127,19 @@ private:
         [this, self](std::error_code ec, std::size_t length) {
           if (!ec) {
             handle_request(std::string(data_.data(), length), this->server_);
-            do_write();
           }
         });
+  }
+
+  void send_response(std::string resp) {
+    auto self = shared_from_this();
+    message_ = std::move(resp);
+    asio::async_write(socket_, asio::buffer(message_),
+                      [this, self](std::error_code ec, std::size_t) {
+                        if (!ec) {
+                          do_read();
+                        }
+                      });
   }
 
   void handle_request(const std::string &req, Server &server) {
@@ -144,8 +154,11 @@ private:
     size_t remaining = req.length() - (cursor - req.c_str());
 
     auto cmd = parse_command(req.c_str(), req.length());
+    auto session_ptr = shared_from_this();
 
-    cmd->serveRequest();
+    cmd->serveRequest([session = session_ptr](std::string resp) {
+      session->send_response(std::move(resp));
+    });
   }
 
   void do_write() {

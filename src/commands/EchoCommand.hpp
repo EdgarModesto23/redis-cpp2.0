@@ -2,7 +2,6 @@
 #include "command.hpp"
 #include "database.hpp"
 #include <memory>
-#include <optional>
 #include <string>
 
 class EchoCommand : public ICommand {
@@ -17,7 +16,7 @@ public:
   EchoCommand(EchoCommand &&) noexcept = default;
   EchoCommand &operator=(EchoCommand &&) noexcept = delete;
 
-  void serveRequest() override;
+  void serveRequest(std::function<void(std::string)> respond) override;
 
 private:
   std::shared_ptr<Database> db_;

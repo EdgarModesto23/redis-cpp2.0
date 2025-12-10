@@ -18,7 +18,7 @@ public:
   LpopCommand(LpopCommand &&) noexcept = default;
   LpopCommand &operator=(LpopCommand &&) noexcept = delete;
 
-  void serveRequest() override;
+  void serveRequest(std::function<void(std::string)> respond) override;
 
 private:
   std::shared_ptr<Database> db_;

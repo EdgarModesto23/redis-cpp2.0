@@ -1,10 +1,12 @@
 #include "database.hpp"
 #include "asio.hpp"
+#include <algorithm>
 #include <asio/error_code.hpp>
 #include <chrono>
 #include <cstdint>
 #include <exception>
 #include <optional>
+#include <spdlog/spdlog.h>
 #include <string>
 #include <vector>
 
@@ -200,4 +202,72 @@ int Database::setListLeft(const std::string &key,
   std::reverse(vec.begin(), vec.end());
 
   return vec.size();
+}
+
+void Database::asyncBlpop(const std::string &key, double timeout,
+                          BlpopHandler handler) {
+  // 1. Try immediate pop:
+  auto listOpt = findlistStoreValue(key);
+  if (listOpt && !listOpt->empty()) {
+    handler(removeListValue(key));
+    return;
+  }
+
+  size_t id = waiter_count_++;
+
+  // Create a Waiter (timer may be null if timeout==0)
+  std::shared_ptr<asio::steady_timer> timer = nullptr;
+
+  // 2. If timeout > 0, create timer. If timeout == 0 → wait indefinitely.
+  if (timeout > 0) {
+    timer = std::make_shared<asio::steady_timer>(ctx_);
+    timer->expires_after(
+        std::chrono::milliseconds(static_cast<int>(timeout * 1000)));
+
+    timer->async_wait([this, key, id](const asio::error_code &ec) {
+      if (ec)
+        return; // timer canceled by wake-up event
+
+      auto &vec = waiters_[key];
+
+      auto it = std::find_if(vec.begin(), vec.end(),
+                             [id](const Waiter &w) { return w.id == id; });
+
+      if (it != vec.end()) {
+        auto handler = it->handler;
+        vec.erase(it);
+        handler(std::nullopt); // timeout
+      }
+    });
+  }
+
+  // 3. Add waiter to queue
+  waiters_[key].push_back(Waiter{id, handler, timer});
+}
+
+void Database::notifyListPush(const std::string &key) {
+  auto it = waiters_.find(key);
+  if (it == waiters_.end()) {
+    spdlog::error("Not found");
+    return;
+  }
+
+  auto &queue = it->second;
+  if (queue.empty()) {
+    spdlog::error("Queue empty");
+    return;
+  }
+
+  // Pop oldest waiter
+  Waiter w = queue.front();
+  queue.erase(queue.begin());
+
+  // Cancel timeout timer (if any)
+
+  if (w.timer) {
+    w.timer->cancel();
+  }
+
+  // Deliver value
+  w.handler(removeListValue(key));
 }

@@ -1,5 +1,6 @@
 #include "RpushCommand.hpp"
 #include "integer.hpp"
+#include <functional>
 #include <string>
 #include <vector>
 
@@ -13,8 +14,9 @@ RpushCommand::RpushCommand(std::shared_ptr<Database> db, std::string &buf,
                            std::vector<std::string> element) noexcept
     : db_(db), buff_(buf), key_(key), element_(element) {}
 
-void RpushCommand::serveRequest() {
+void RpushCommand::serveRequest(std::function<void(std::string)> respond) {
   int size = db_->setList(key_, element_);
 
-  buff_ = Integer::to_resp(size);
+  respond(Integer::to_resp(size));
+  db_->notifyListPush(key_);
 }

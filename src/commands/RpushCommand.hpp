@@ -1,6 +1,7 @@
 #pragma once
 #include "command.hpp"
 #include "database.hpp"
+#include <functional>
 #include <memory>
 #include <optional>
 #include <string>
@@ -21,7 +22,7 @@ public:
   RpushCommand(RpushCommand &&) noexcept = default;
   RpushCommand &operator=(RpushCommand &&) noexcept = delete;
 
-  void serveRequest() override;
+  void serveRequest(std::function<void(std::string)> respond) override;
 
 private:
   std::shared_ptr<Database> db_;

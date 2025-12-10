@@ -6,6 +6,6 @@ LlenCommand::LlenCommand(std::shared_ptr<Database> db, std::string &buf,
                          std::string key) noexcept
     : db_(db), buff_(buf), key_(key) {}
 
-void LlenCommand::serveRequest() {
-  buff_ = Integer::to_resp(db_->getListLength(key_));
+void LlenCommand::serveRequest(std::function<void(std::string)> respond) {
+  respond(Integer::to_resp(db_->getListLength(key_)));
 }

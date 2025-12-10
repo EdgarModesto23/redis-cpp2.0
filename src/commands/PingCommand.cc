@@ -2,12 +2,12 @@
 #include <optional>
 #include <unistd.h>
 
-void PingCommand::serveRequest() {
+void PingCommand::serveRequest(std::function<void(std::string)> respond) {
 
   if (message_ != std::nullopt) {
-    buff_ = message_.value();
+    respond(message_.value());
     return;
   }
 
-  buff_ = "+PONG\r\n";
+  respond("+PONG\r\n");
 }

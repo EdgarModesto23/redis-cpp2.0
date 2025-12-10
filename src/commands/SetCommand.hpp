@@ -19,7 +19,7 @@ public:
   SetCommand(SetCommand &&) noexcept = default;
   SetCommand &operator=(SetCommand &&) noexcept = delete;
 
-  void serveRequest() override;
+  void serveRequest(std::function<void(std::string)> respond) override;
 
 private:
   std::shared_ptr<Database> db_;
