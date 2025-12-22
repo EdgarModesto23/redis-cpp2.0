@@ -20,5 +20,6 @@ target_link_libraries(redis
         asio::asio
         Threads::Threads
         spdlog::spdlog_header_only
+        argparse
 )
 

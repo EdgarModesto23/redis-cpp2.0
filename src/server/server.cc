@@ -202,7 +202,7 @@ void Server::accept() {
 
 int Server::init_server() {
 
-  spdlog::info("Listening on port 6379...");
+  spdlog::info("Listening on port {}...", port_);
   spdlog::debug("Waiting for a client to connect...");
   accept();
 

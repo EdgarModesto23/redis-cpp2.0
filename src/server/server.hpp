@@ -13,9 +13,9 @@ std::vector<IEncode> parse_request(const std::string &req, int length);
 
 class Server {
 public:
-  Server(asio::io_context &ctx)
+  Server(asio::io_context &ctx, int port)
       : db_(std::make_shared<Database>(ctx)), ctx_(ctx),
-        acceptor_(ctx_, tcp::endpoint(tcp::v4(), 6379)) {};
+        acceptor_(ctx_, tcp::endpoint(tcp::v4(), port)), port_(port) {};
 
   int init_server();
   void accept();
@@ -26,4 +26,5 @@ private:
   std::shared_ptr<Database> db_;
   asio::io_context &ctx_;
   asio::ip::tcp::acceptor acceptor_;
+  int port_;
 };
