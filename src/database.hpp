@@ -6,14 +6,18 @@
 #include <string>
 #include <unordered_map>
 
+struct ServerConfig {
+  std::string master_address;
+};
+
 class Database {
 public:
-  explicit Database(asio::io_context &ctx) noexcept
+  explicit Database(asio::io_context &ctx, ServerConfig config) noexcept
       : kvStore_(std::unordered_map<std::string, std::string>()),
         listStore_(std::unordered_map<std::string, std::vector<std::string>>()),
         ctx_(ctx),
         waiters_(std::unordered_map<std::string, std::vector<Waiter>>()),
-        waiter_count_(0) {};
+        waiter_count_(0), config_(std::move(config)) {};
 
   std::string getValue(const std::string &key);
   void setValue(const std::string &key, std::string &value, int64_t time = 0);
@@ -38,6 +42,7 @@ public:
   void asyncBlpop(const std::string &key, double timeout, BlpopHandler handler);
 
   void notifyListPush(const std::string &key);
+  ServerConfig config_;
 
 private:
   std::unordered_map<std::string, std::string> kvStore_;
