@@ -22,7 +22,7 @@ public:
   {class_name}({class_name} &&) noexcept = default;
   {class_name} &operator=({class_name} &&) noexcept = delete;
 
-  void serveRequest() override;
+  void serveRequest(std::function<void(std::string)> respond) override;
 
 private:
   std::shared_ptr<Database> db_;
@@ -40,7 +40,7 @@ CPP_SOURCE_TEMPLATE = """#include "{header_name}"
 {{
 }}
 
-void {class_name}::serveRequest() {{
+void {class_name}::serveRequest(std::function<void(std::string)> respond) {{
   // TODO: Implement command logic for {class_name}
 }}
 """

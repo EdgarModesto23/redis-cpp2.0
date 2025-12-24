@@ -2,12 +2,15 @@
 #include "BlpopCommand.hpp"
 #include "EchoCommand.hpp"
 #include "GetCommand.hpp"
+#include "InfoCommand.hpp"
 #include "LlenCommand.hpp"
 #include "LpopCommand.hpp"
 #include "LpushCommand.hpp"
 #include "LrangeCommand.hpp"
 #include "RpushCommand.hpp"
 #include "SetCommand.hpp"
+#include <algorithm>
+#include <cctype>
 #include <cstdlib>
 #include <memory>
 #include <optional>
@@ -24,6 +27,7 @@ enum class CommandType {
   LLEN,
   LPOP,
   BLPOP,
+  INFO,
   UNKNOWN
 };
 
@@ -48,17 +52,19 @@ static CommandType to_command(const std::string &cmd) {
     return CommandType::LPOP;
   if (cmd == "BLPOP")
     return CommandType::BLPOP;
+  if (cmd == "INFO")
+    return CommandType::INFO;
   return CommandType::UNKNOWN;
 }
 
 std::unique_ptr<ICommand>
-router::get_command(const std::string &cmd_name,
-                    const std::vector<std::string> &args, Server &srv,
-                    std::string &buffer) {
+router::get_command(std::string &cmd_name, const std::vector<std::string> &args,
+                    Server &srv, std::string &buffer) {
   auto db = srv.get_db();
 
-  switch (to_command(cmd_name)) {
+  std::transform(cmd_name.begin(), cmd_name.end(), cmd_name.begin(), ::toupper);
 
+  switch (to_command(cmd_name)) {
   case CommandType::PING:
     if (!args.empty()) {
       return std::make_unique<PingCommand>(db, buffer, args[0]);
@@ -135,7 +141,11 @@ router::get_command(const std::string &cmd_name,
                                             std::stod(args[1]));
     }
     return std::make_unique<PingCommand>(db, buffer);
-
+  case CommandType::INFO:
+    if (!args.empty()) {
+      return std::make_unique<InfoCommand>(db, buffer, args[0]);
+    }
+    return std::make_unique<InfoCommand>(db, buffer, std::nullopt);
   case CommandType::UNKNOWN:
   default:
     return std::make_unique<PingCommand>(db, buffer);
