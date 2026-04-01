@@ -1,12 +1,16 @@
 #include "server.hpp"
+#include "array.hpp"
 #include "bulkstring.hpp"
 #include "command.hpp"
 #include "router.hpp"
 #include "spdlog/spdlog.h"
 #include <arpa/inet.h>
 #include <asio.hpp>
+#include <asio/connect.hpp>
 #include <asio/ip/tcp.hpp>
 #include <asio/placeholders.hpp>
+#include <asio/registered_buffer.hpp>
+#include <asio/write.hpp>
 #include <cstdlib>
 #include <cstring>
 #include <exception>
@@ -191,7 +195,7 @@ void handle_accept(Server &srv, tcp_connection::pointer con,
   srv.accept();
 }
 
-void Server::accept() {
+void MasterServer::accept() {
 
   tcp_connection::pointer new_conn = tcp_connection::create(ctx_, *this);
   acceptor_.async_accept(new_conn->socket(),
@@ -200,10 +204,65 @@ void Server::accept() {
                          });
 }
 
-int Server::init_server() {
-
+int MasterServer::init_server() {
   spdlog::info("Listening on port {}...", port_);
   spdlog::debug("Waiting for a client to connect...");
+  accept();
+
+  ctx_.run();
+
+  return 0;
+}
+
+std::unique_ptr<Server> make_server(asio::io_context &ctx,
+                                    ServerConfig config) {
+
+  if (config.master_address == std::string("master")) {
+    return std::make_unique<MasterServer>(ctx, config.port, std::move(config));
+  } else {
+
+    const std::string master_port = config.master_port;
+    const std::string master_host = config.master_address;
+    return std::make_unique<ReplicaServer>(ctx, config.port, std::move(config),
+                                           master_port, master_host);
+  }
+}
+
+void ReplicaServer::accept() {
+
+  tcp_connection::pointer new_conn = tcp_connection::create(ctx_, *this);
+  acceptor_.async_accept(new_conn->socket(),
+                         [this, new_conn](const std::error_code &err) {
+                           handle_accept(*this, new_conn, err);
+                         });
+}
+
+int ReplicaServer::init_server() {
+
+  spdlog::info("Listening on port {}...", port_);
+  spdlog::info("I'm a replica!");
+  spdlog::info("Connecting to host {} on port {}", master_host_, master_port_);
+
+  try {
+    tcp::resolver resolver(ctx_);
+
+    auto endpoints = resolver.resolve(master_host_, master_port_);
+
+    tcp::socket socket(ctx_);
+    asio::connect(socket, endpoints);
+
+    std::string request = "*1\r\n$4\r\nPING\r\n";
+
+    asio::write(socket, asio::buffer(request));
+    char reply[1024];
+    size_t reply_length =
+        asio::read(socket, asio::buffer(reply), asio::transfer_at_least(1));
+
+    std::cout << "Reply: " << std::string(reply, reply_length) << "\n";
+  } catch (std::exception &e) {
+    spdlog::error("Exception: {}", e.what());
+  }
+
   accept();
 
   ctx_.run();

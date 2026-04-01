@@ -3,11 +3,14 @@
 #include <asio/steady_timer.hpp>
 #include <cstdint>
 #include <memory>
+#include <optional>
 #include <string>
 #include <unordered_map>
 
 struct ServerConfig {
   std::string master_address;
+  int port;
+  std::string master_port;
 };
 
 class Database {

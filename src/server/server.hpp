@@ -13,7 +13,19 @@ std::vector<IEncode> parse_request(const std::string &req, int length);
 
 class Server {
 public:
-  Server(asio::io_context &ctx, int port, ServerConfig config)
+  virtual int init_server() = 0;
+  virtual void accept() = 0;
+
+  virtual std::shared_ptr<Database> get_db() = 0;
+
+  virtual ~Server() = default;
+};
+
+std::unique_ptr<Server> make_server(asio::io_context &ctx, ServerConfig config);
+
+class MasterServer : public Server {
+public:
+  MasterServer(asio::io_context &ctx, int port, ServerConfig config)
       : db_(std::make_shared<Database>(ctx, std::move(config))), ctx_(ctx),
         acceptor_(ctx_, tcp::endpoint(tcp::v4(), port)), port_(port) {};
 
@@ -27,4 +39,26 @@ private:
   asio::io_context &ctx_;
   asio::ip::tcp::acceptor acceptor_;
   int port_;
+};
+
+class ReplicaServer : public Server {
+public:
+  ReplicaServer(asio::io_context &ctx, int port, const ServerConfig &config,
+                const std::string &master_port, const std::string &master_host)
+      : db_(std::make_shared<Database>(ctx, std::move(config))), ctx_(ctx),
+        acceptor_(ctx_, tcp::endpoint(tcp::v4(), port)), port_(port),
+        master_port_(master_port), master_host_(master_host) {};
+
+  int init_server();
+  void accept();
+
+  std::shared_ptr<Database> get_db() { return db_; }
+
+private:
+  std::shared_ptr<Database> db_;
+  asio::io_context &ctx_;
+  asio::ip::tcp::acceptor acceptor_;
+  int port_;
+  std::string master_port_;
+  std::string master_host_;
 };
