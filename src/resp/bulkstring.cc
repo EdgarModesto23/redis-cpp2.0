@@ -11,7 +11,7 @@ char *BulkString::encode() {
   std::string header = "$" + std::to_string(value_.size()) + "\r\n";
 
   size_t totalSize = header.size() + value_.size() + 2;
-  encodedBuffer_.resize(totalSize);
+  encodedBuffer_.resize(totalSize + 1);
 
   size_t offset = 0;
   std::memcpy(encodedBuffer_.data(), header.data(), header.size());
@@ -22,6 +22,7 @@ char *BulkString::encode() {
 
   encodedBuffer_[offset++] = '\r';
   encodedBuffer_[offset++] = '\n';
+  encodedBuffer_[offset] = '\0';
 
   return encodedBuffer_.data();
 }

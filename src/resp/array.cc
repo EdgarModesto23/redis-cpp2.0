@@ -6,6 +6,18 @@
 RespArray::RespArray(std::vector<BulkString> elements)
     : elements_(std::move(elements)) {}
 
+RespArray::RespArray(std::vector<std::string> strings) {
+  elements_.reserve(strings.size());
+  for (auto &s : strings)
+    elements_.emplace_back(std::move(s));
+}
+
+RespArray::RespArray(std::initializer_list<Arg> init) {
+  elements_.reserve(init.size());
+  for (const auto &a : init)
+    elements_.emplace_back(a.text);
+}
+
 char *RespArray::encode() {
   std::string header = "*" + std::to_string(elements_.size()) + "\r\n";
 
@@ -31,6 +43,8 @@ char *RespArray::encode() {
     offset += len;
   }
 
+  encodedBuffer_.resize(total + 1);
+  encodedBuffer_[total] = '\0';
   return encodedBuffer_.data();
 }
 

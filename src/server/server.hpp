@@ -55,6 +55,7 @@ public:
   std::shared_ptr<Database> get_db() { return db_; }
 
 private:
+  inline void connect_to_master();
   std::shared_ptr<Database> db_;
   asio::io_context &ctx_;
   asio::ip::tcp::acceptor acceptor_;

@@ -7,7 +7,7 @@ SimpleString::SimpleString(const std::string &value) : value_(value) {}
 // ---------------- encode() ----------------
 char *SimpleString::encode() {
   size_t totalSize = 1 + value_.size() + 2;
-  encodedBuffer_.resize(totalSize);
+  encodedBuffer_.resize(totalSize + 1);
 
   size_t offset = 0;
   encodedBuffer_[offset++] = '+';
@@ -17,6 +17,7 @@ char *SimpleString::encode() {
 
   encodedBuffer_[offset++] = '\r';
   encodedBuffer_[offset++] = '\n';
+  encodedBuffer_[offset] = '\0';
 
   return encodedBuffer_.data();
 }

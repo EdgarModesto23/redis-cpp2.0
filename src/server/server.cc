@@ -1,8 +1,10 @@
 #include "server.hpp"
 #include "array.hpp"
 #include "bulkstring.hpp"
+#include "client/client.hpp"
 #include "command.hpp"
 #include "router.hpp"
+#include "simplestring.hpp"
 #include "spdlog/spdlog.h"
 #include <arpa/inet.h>
 #include <asio.hpp>
@@ -205,7 +207,7 @@ void MasterServer::accept() {
 }
 
 int MasterServer::init_server() {
-  spdlog::info("Listening on port {}...", port_);
+  spdlog::info("Listening on port {}...", std::to_string(port_));
   spdlog::debug("Waiting for a client to connect...");
   accept();
 
@@ -237,6 +239,32 @@ void ReplicaServer::accept() {
                          });
 }
 
+inline void ReplicaServer::connect_to_master() {
+
+  Client c{master_host_, master_port_, ctx_};
+
+  c.connect();
+
+  auto response = c.ping();
+
+  spdlog::info(response.get());
+
+  if (response.get() != "PONG") {
+    spdlog::error("NOT PONG");
+    throw std::runtime_error("NOT PONG");
+  }
+
+  auto response1 = c.send_array_command<SimpleString>(
+      RespArray({"REPLCONF", "listening-port", std::to_string(port_)}));
+
+  spdlog::info(response1.get());
+
+  auto response2 = c.send_array_command<SimpleString>(
+      RespArray({"REPLCONF", "capa", "psync2"}));
+
+  spdlog::info(response2.get());
+}
+
 int ReplicaServer::init_server() {
 
   spdlog::info("Listening on port {}...", port_);
@@ -244,21 +272,7 @@ int ReplicaServer::init_server() {
   spdlog::info("Connecting to host {} on port {}", master_host_, master_port_);
 
   try {
-    tcp::resolver resolver(ctx_);
-
-    auto endpoints = resolver.resolve(master_host_, master_port_);
-
-    tcp::socket socket(ctx_);
-    asio::connect(socket, endpoints);
-
-    std::string request = "*1\r\n$4\r\nPING\r\n";
-
-    asio::write(socket, asio::buffer(request));
-    char reply[1024];
-    size_t reply_length =
-        asio::read(socket, asio::buffer(reply), asio::transfer_at_least(1));
-
-    std::cout << "Reply: " << std::string(reply, reply_length) << "\n";
+    connect_to_master();
   } catch (std::exception &e) {
     spdlog::error("Exception: {}", e.what());
   }

@@ -7,6 +7,7 @@
 #include "LpopCommand.hpp"
 #include "LpushCommand.hpp"
 #include "LrangeCommand.hpp"
+#include "ReplconfCommand.hpp"
 #include "RpushCommand.hpp"
 #include "SetCommand.hpp"
 #include <algorithm>
@@ -28,6 +29,7 @@ enum class CommandType {
   LPOP,
   BLPOP,
   INFO,
+  REPLCONF,
   UNKNOWN
 };
 
@@ -54,6 +56,8 @@ static CommandType to_command(const std::string &cmd) {
     return CommandType::BLPOP;
   if (cmd == "INFO")
     return CommandType::INFO;
+  if (cmd == "REPLCONF")
+    return CommandType::REPLCONF;
   return CommandType::UNKNOWN;
 }
 
@@ -146,6 +150,9 @@ router::get_command(std::string &cmd_name, const std::vector<std::string> &args,
       return std::make_unique<InfoCommand>(db, buffer, args[0]);
     }
     return std::make_unique<InfoCommand>(db, buffer, std::nullopt);
+  case CommandType::REPLCONF:
+    return std::make_unique<ReplconfCommand>(db, buffer);
+
   case CommandType::UNKNOWN:
   default:
     return std::make_unique<PingCommand>(db, buffer);

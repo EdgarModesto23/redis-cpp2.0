@@ -1,6 +1,7 @@
 add_subdirectory(commands)
 add_subdirectory(resp)
 add_subdirectory(server)
+add_subdirectory(client)
 
 file(GLOB_RECURSE SOURCE_FILES ./*.cc)
 
@@ -16,6 +17,7 @@ target_link_libraries(redis
         resp
         commands
         server
+        client
         database
         asio::asio
         Threads::Threads
