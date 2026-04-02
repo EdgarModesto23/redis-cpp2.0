@@ -263,6 +263,11 @@ inline void ReplicaServer::connect_to_master() {
       RespArray({"REPLCONF", "capa", "psync2"}));
 
   spdlog::info(response2.get());
+
+  auto response3 =
+      c.send_array_command<SimpleString>(RespArray({"PSYNC", "?", "-1"}));
+
+  spdlog::info(response2.get());
 }
 
 int ReplicaServer::init_server() {
